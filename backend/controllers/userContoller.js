@@ -1,8 +1,8 @@
-import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/user.js';
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const register = async (req, res) => {
     const {firstName, email, password} = req.body;
@@ -33,7 +33,7 @@ export const register = async (req, res) => {
         await user.save();
 
         // generate a token using jwt
-        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expires: '7d'});
+        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '7d'});
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
