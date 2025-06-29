@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/user.js';
 import dotenv from 'dotenv';
+import transporter from '../config/nodemailer.js';
 dotenv.config();
 
 export const register = async (req, res) => {
@@ -42,6 +43,17 @@ export const register = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
+
+        // sending welcome mail
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to: email,
+            subject: 'welcome to company',
+            text: `welcome to our company. your account has been created with id ${email}`
+        }
+
+        await transporter.sendMail(mailOptions);
+
         return res.json({
             success: true,
             message: "user register successfully"
@@ -58,6 +70,7 @@ export const register = async (req, res) => {
 
 
 
+// login controller
 export const login = async (req, res) => {
     const { email, password } = req.body;
     if(!email || !password) {
@@ -96,7 +109,7 @@ export const login = async (req, res) => {
 
         return res.json({
             success: true,
-            message: "user login"
+            message: "user login successfully"
         })
     } catch(err) {
         console.log(err);
