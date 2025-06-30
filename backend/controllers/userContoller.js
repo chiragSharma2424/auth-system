@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import userModel from '../models/user.js';
 import dotenv from 'dotenv';
 import transporter from '../config/nodemailer.js';
+import { use } from 'react';
 dotenv.config();
 
 export const register = async (req, res) => {
@@ -190,6 +191,9 @@ export const sendVerifyOtp = async (req, res) => {
     }
 }
 
+
+
+// verfiy the email using otp
 export const verifyEmail = async (req, res) => {
     const {userId, otp} = req.body;
     if(!userId || !otp) {
@@ -235,6 +239,57 @@ export const verifyEmail = async (req, res) => {
 
     } catch(err) {
         res.json({
+            success: false,
+            message: err.message
+        })
+    }
+}
+
+
+
+// check user is authenicated or not
+// it will only check user is authenticted or not jab tak token 
+// cookie me h tw user authenticated h
+
+export const isAuthenticated = async (req, res) => {
+    try {
+        return res.json({
+            success: true,
+        })
+    } catch(err) {
+        res.json({
+            success: false,
+            message: err.message
+        })
+    }
+}
+
+
+
+
+// send password reset otp
+export const sendResetOtp = async (req, res) => {
+    const { email } = req.body;
+    if(!email) {
+        return res.json({
+            success: false,
+            message: "email is required"
+        })
+    }
+
+    try {
+        const user = userModel.findOne({email});
+        if(!user) {
+            return res.json({
+                success: false,
+                message: "user will not found"
+            })
+        }
+
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        user.reset
+    } catch(err) {
+        return res.json({
             success: false,
             message: err.message
         })
