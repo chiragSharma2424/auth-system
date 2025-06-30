@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 import userModel from '../models/user.js';
 import dotenv from 'dotenv';
 import transporter from '../config/nodemailer.js';
-import { use } from 'react';
 dotenv.config();
 
 export const register = async (req, res) => {
@@ -287,9 +286,83 @@ export const sendResetOtp = async (req, res) => {
         }
 
         const otp = String(Math.floor(100000 + Math.random() * 900000));
-        user.reset
+        user.resetOtp = otp;
+        user.resetOtpExpireAt = Date.now() + 15 * 60 * 1000;
+        await user.save();
+
+        const mailOption = {
+            from: process.env.SENDER_EMAIL,
+            to: user.email,
+            subject: 'Password reset OTP',
+            text: `Your otp for resetting your password is ${otp} use
+            thi OTP to proceed with resetting your password`
+        }
+        await transporter.sendMail(mailOption);
+
+        return res.json({
+            success: true,
+            message: "OTP sent to your email"
+        });
+
     } catch(err) {
         return res.json({
+            success: false,
+            message: err.message
+        })
+    }
+}
+
+
+
+
+// Reset user password
+export const resetPassword = async (req, res) => {
+    const {email, otp, newPassword} = req.body;
+    
+    if(!email || !otp || !newPassword) {
+        return res.json({
+            success: false,
+            message: "email, otp and new password is reqired"
+        })
+    }
+
+    try {
+        const user = await userModel.findOne({email});
+        if(!user) {
+            res.json({
+                success: false,
+                message: "user not found"
+            })
+        }
+
+        if(user.resetOtp === ' ' || user.resetOtp !== otp) {
+            return res.json({
+                success: false,
+                message: "invalid otp"
+            })
+        }
+
+        if(user.resetOtpExpireAt < Date.now()) {
+            return res.json({
+                success: false,
+                message: "otp is expired"
+            })
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        user.resetOtp = ' ';
+        user.resetOtpExpireAt = 0;
+        await new user.save();
+
+        return res.json({
+            success: true,
+            message: "password has been reset successfully"
+        });
+
+
+    } catch(err) {
+        res.json({
             success: false,
             message: err.message
         })
