@@ -353,7 +353,7 @@ export const resetPassword = async (req, res) => {
         user.password = hashedPassword;
         user.resetOtp = ' ';
         user.resetOtpExpireAt = 0;
-        await new user.save();
+        await new user.save(); 
 
         return res.json({
             success: true,
